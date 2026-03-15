@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBO 종합순위</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-size: 14px;
+            color: #333;
+            background: #fff;
+        }
+
+        .wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead tr {
+            border-top: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f9f9f9;
+        }
+
+        thead th {
+            padding: 10px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #666;
+            text-align: center;
+            white-space: nowrap;
+        }
+        thead th.th-rank  { text-align: left; width: 60px; }
+        thead th.th-team  { text-align: left; }
+        thead th.th-wpct  { color: #4a90e2; font-weight: 700; }
+
+        tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+        }
+        tbody tr:hover { background: #fafafa; }
+
+        tbody td {
+            padding: 14px 12px;
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .td-rank {
+            text-align: left;
+            font-size: 15px;
+            font-weight: 700;
+            color: #111;
+            width: 50px;
+        }
+
+        .td-team { text-align: left; }
+        .team-inner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .team-logo {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+        .team-label {
+            font-size: 14px;
+            color: #111;
+            font-weight: 400;
+        }
+        .team-label .arrow {
+            color: #aaa;
+            font-size: 11px;
+            margin-left: 2px;
+        }
+
+        .td-wpct {
+            font-weight: 700;
+            color: #111;
+        }
+
+        .streak-win { color: #e8392a; }
+        .streak-loss { color: #4a90e2; }
+
+        .loading {
+            text-align: center;
+            padding: 60px 0;
+            color: #aaa;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div id="content">
+        <div class="loading">데이터를 불러오는 중입니다...</div>
+    </div>
+</div>
+
+<script>
+    var jsonUrl = 'https://prof-jwchi.github.io/kopo-front2026/Json/baseball.json';
+
+    var request = new XMLHttpRequest();
+    request.open("GET", jsonUrl);
+    request.responseType = "json";
+    request.send();
+
+    request.addEventListener('load', function () {
+        if (request.status !== 200) {
+            document.getElementById('content').innerHTML = '<div class="loading">데이터를 불러올 수 없습니다.</div>';
+            return;
+        }
+        renderTable(request.response.list);
+    });
+
+    function renderTable(teams) {
+        var html = '<table>';
+
+        html += '<thead><tr>'
+            + '<th class="th-rank">순위</th>'
+            + '<th class="th-team">팀</th>'
+            + '<th>경기</th>'
+            + '<th>승</th>'
+            + '<th>무</th>'
+            + '<th>패</th>'
+            + '<th class="th-wpct">승률</th>'
+            + '<th>게임차</th>'
+            + '<th>연속</th>'
+            + '</tr></thead>';
+
+        html += '<tbody>';
+        teams.forEach(function (team) {
+            var r = team.rank;
+            var isWin = r.streak.indexOf('승') !== -1;
+            var streakClass = isWin ? 'streak-win' : 'streak-loss';
+
+            html += '<tr>'
+                + '<td class="td-rank">' + r.rank + '</td>'
+                + '<td class="td-team">'
+                    + '<div class="team-inner">'
+                    + '<img class="team-logo" src="' + team.imageUrl + '" alt="' + team.shortName + '" onerror="this.style.display=\'none\'">'
+                    + '<span class="team-label">' + team.shortName + ' <span class="arrow">›</span></span>'
+                    + '</div>'
+                + '</td>'
+                + '<td>' + r.game + '</td>'
+                + '<td>' + r.win + '</td>'
+                + '<td>' + r.draw + '</td>'
+                + '<td>' + r.loss + '</td>'
+                + '<td class="td-wpct">' + r.wpct.toFixed(3) + '</td>'
+                + '<td>' + r.gb + '</td>'
+                + '<td class="' + streakClass + '">' + r.streak + '</td>'
+                + '</tr>';
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('content').innerHTML = html;
+    }
+</script>
+</body>
+</html>
